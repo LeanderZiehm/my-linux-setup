@@ -7,8 +7,8 @@ I have split a few into their own repos:
 ## Notes/Wiki:
 https://github.com/LeanderZiehm/wiki
 
-## configurations/dotfiles: 
+## Configurations/Dotfiles: 
 https://github.com/LeanderZiehm/dotfiles
 
-## devops
+## Devops
 https://github.com/LeanderZiehm/devops
