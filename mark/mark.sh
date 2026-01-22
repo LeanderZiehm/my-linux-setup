@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-MARKS_FILE="$HOME/marks.csv"
+XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+MARK_DIR="$XDG_DATA_HOME/mark"
+MARKS_FILE="$MARK_DIR/marks.csv"
 touch "$MARKS_FILE"
 
 # Add the current directory with timestamp and event type "marked"
@@ -69,13 +71,15 @@ fzf_jump() {
         event=$3;
         if(event=="marked") {count_marked[path]++; if(time>latest_marked[path]) latest_marked[path]=time}
         else if(event=="selected") {count_selected[path]++; if(time>latest_selected[path]) latest_selected[path]=time}
+        # Build unique paths
+        all_paths[path]=1
     } END {
-        for(p in count_marked count_selected) {
+        for(p in all_paths) {
             cm = count_marked[p]+0
             cs = count_selected[p]+0
             lm = latest_marked[p] ? latest_marked[p] : "1970-01-01 00:00:00"
             ls = latest_selected[p] ? latest_selected[p] : "1970-01-01 00:00:00"
-            print cs "\tls\tcm\tlm\t" p
+            print cs "\t" ls "\t" cm "\t" lm "\t" p
         }
     }' "$MARKS_FILE" > "$tmp"
 
