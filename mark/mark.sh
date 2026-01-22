@@ -51,7 +51,7 @@ list_marks() {
     awk -F',' '{gsub(/^"|"$/,"",$1); print $1 "  (" $2 ")"}' "$MARKS_FILE"
 }
 
-# FZF select and jump
+# FZF select and jump, deduplicated and sorted by recency/frequency
 fzf_jump() {
     if ! command -v fzf &>/dev/null; then
         echo "fzf not found. Install it to use this feature." >&2
@@ -63,8 +63,27 @@ fzf_jump() {
         return 1
     fi
 
+    # Prepare list: deduplicate paths, count frequency, get latest timestamp
+    local tmp
+    tmp=$(mktemp)
+
+    awk -F',' '{
+        gsub(/^"|"$/,"",$1);
+        path=$1;
+        time=$2;
+        count[path]++;
+        if (time > last[path]) last[path]=time;
+    } END {
+        for(p in count) print count[p] "\t" last[p] "\t" p;
+    }' "$MARKS_FILE" > "$tmp"
+
+    # Sort: first by recency (desc), then frequency (desc)
+    # -k2: timestamp descending, -k1: frequency descending
     local path
-    path=$(awk -F',' '{gsub(/^"|"$/,"",$1); print $1}' "$MARKS_FILE" | fzf --prompt="Select mark: ")
+    path=$(sort -r -k2,2 -k1,1 -t$'\t' "$tmp" | awk -F'\t' '{print $3}' | fzf --prompt="Select mark: ")
+
+    rm -f "$tmp"
+
     [ -n "$path" ] && cd "$path"
 }
 
