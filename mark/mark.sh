@@ -3,6 +3,7 @@
 MARKS_FILE="$HOME/marks.csv"
 touch "$MARKS_FILE"
 
+# Add the current directory with timestamp
 add_mark() {
     local path timestamp
     path="$(pwd)"
@@ -11,14 +12,15 @@ add_mark() {
     echo "Marked: $path at $timestamp"
 }
 
+# Simple fuzzy search by query
 fuzzy_search() {
     local query="$1"
     awk -F',' -v q="$query" '{ gsub(/^"|"$/, "", $1); if (tolower($1) ~ tolower(q)) print $1 }' "$MARKS_FILE"
 }
 
+# Jump to a fuzzy match (prompts if multiple)
 jump_mark() {
-    local query="$1"
-    local matches selected path
+    local query matches selected path
 
     matches=$(fuzzy_search "$query")
 
@@ -40,11 +42,50 @@ jump_mark() {
     cd "$path" || return 1
 }
 
+# List all stored marks
+list_marks() {
+    if [ ! -s "$MARKS_FILE" ]; then
+        echo "No marks stored yet."
+        return
+    fi
+    awk -F',' '{gsub(/^"|"$/,"",$1); print $1 "  (" $2 ")"}' "$MARKS_FILE"
+}
+
+# FZF select and jump
+fzf_jump() {
+    if ! command -v fzf &>/dev/null; then
+        echo "fzf not found. Install it to use this feature." >&2
+        return 1
+    fi
+
+    if [ ! -s "$MARKS_FILE" ]; then
+        echo "No marks stored yet."
+        return 1
+    fi
+
+    local path
+    path=$(awk -F',' '{gsub(/^"|"$/,"",$1); print $1}' "$MARKS_FILE" | fzf --prompt="Select mark: ")
+    [ -n "$path" ] && cd "$path"
+}
+
 # Main logic
-if [ "$1" == "jump" ]; then
-    shift
-    read -rp "Search: " query
-    jump_mark "$query"
-else
-    add_mark
-fi
+case "$1" in
+    jump)
+        shift
+        if [ $# -gt 0 ]; then
+            jump_mark "$*"
+        else
+            read -rp "Search: " query
+            jump_mark "$query"
+        fi
+        ;;
+    ls)
+        list_marks
+        ;;
+    fzf)
+        fzf_jump
+        ;;
+    *)
+        add_mark
+        ;;
+esac
