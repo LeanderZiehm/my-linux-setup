@@ -51,8 +51,8 @@ On Windows you can install the Windows Subsystem for Linux (WSL) and follow the 
 1. **Clone the repository** (or copy the files into a new directory):  
 
    ```bash
-   git clone https://github.com/your‑username/speech-makefile.git
-   cd speech-makefile
+   git clone https://github.com/LeanderZiehm/my-linux-setup.git
+   cd my-linux-setup
    ```
 
 2. **Verify dependencies** (make sure the commands below return a version string):  
