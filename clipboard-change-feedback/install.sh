@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # --- CONFIG ---
-PYTHON_SCRIPT="$(pwd)/clipboard-changed-manager.py"
+PYTHON_SCRIPT="$(pwd)/clipboard-change-manager.py"
 SERVICE_NAME="clipboard-feedback.service"
 USER_NAME="$USER"
 
@@ -48,5 +48,16 @@ systemctl --user status $SERVICE_NAME --no-pager
 
 
 
-# systemctl --user restart $SERVICE_NAME
-# systemctl --user restart clipboard-feedback.service
+
+BASHRC="$HOME/.bashrc"
+
+# --- ADD ALIASES IF NOT PRESENT ---
+if ! grep -Fxq 'alias clipoff="systemctl --user stop clipboard-feedback.service"' "$BASHRC"; then
+    echo 'alias clipoff="systemctl --user stop clipboard-feedback.service"' >> "$BASHRC"
+    echo "Added clipoff alias to $BASHRC"
+fi
+
+if ! grep -Fxq 'alias clipon="systemctl --user start clipboard-feedback.service"' "$BASHRC"; then
+    echo 'alias clipon="systemctl --user start clipboard-feedback.service"' >> "$BASHRC"
+    echo "Added clipon alias to $BASHRC"
+fi
