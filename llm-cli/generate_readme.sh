@@ -5,7 +5,7 @@ set -euo pipefail
 
 API_URL="https://llm.leanderziehm.com/chat/auto"
 
-SYSTEM_PROMPT="You are a helpful assistant that generates a comprehensive README.md based on project files. Include installation, usage, and description."
+SYSTEM_PROMPT="You are a helpful assistant that generates a concise README.md based on project files. Include installation, usage, and description. Only put most important information in to not overwelm users."
 
 MAX_FILE_SIZE_KB=200
 EXCLUDES=(
