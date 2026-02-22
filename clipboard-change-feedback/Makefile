@@ -1,17 +1,20 @@
 run:
-	python clipboard-changed-manager.py
+	python clipboard-change-manager.py
 
-install:
+install install.sh:
 	bash install.sh
 
-service-start:
+service-start start:
 	systemctl --user start clipboard-feedback.service
 
-service-stop:
+service-stop stop:
 	systemctl --user stop clipboard-feedback.service
 
-service-restart:
+service-restart restart:
 	systemctl --user restart clipboard-feedback.service
+
+service-logs logs:
+	journalctl --user -u clipboard-feedback.service
 
 
 # run:

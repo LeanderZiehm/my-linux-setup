@@ -5,10 +5,14 @@ PYTHON_SCRIPT="$(pwd)/clipboard-change-manager.py"
 SERVICE_NAME="clipboard-feedback.service"
 USER_NAME="$USER"
 
-# --- CHECKS ---
-if [ ! -f "$PYTHON_SCRIPT" ]; then
-    echo "Error: Python script not found at $PYTHON_SCRIPT"
-    exit 1
+# --- DETECT VENV ---
+# If a .venv directory exists in the project, use it
+VENV_DIR="$(pwd)/.venv"
+
+if [ -d "$VENV_DIR" ]; then
+    PYTHON_BIN="$VENV_DIR/bin/python"
+else
+    PYTHON_BIN="/usr/bin/python3"
 fi
 
 # --- CREATE USER SYSTEMD SERVICE FILE ---
@@ -25,9 +29,9 @@ After=default.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 $PYTHON_SCRIPT
-Restart=always
 WorkingDirectory=$(dirname "$PYTHON_SCRIPT")
+ExecStart=/bin/bash -c 'source $VENV_DIR/bin/activate && exec python $PYTHON_SCRIPT'
+Restart=always
 
 [Install]
 WantedBy=default.target

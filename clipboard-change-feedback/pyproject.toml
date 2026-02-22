@@ -1,0 +1,10 @@
+[project]
+name = "clipboard-change-feedback"
+version = "0.1.0"
+description = "kde clipboard change feedback"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "dbus-python>=1.4.0",
+    "pygobject>=3.54.5",
+]
