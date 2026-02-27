@@ -22,7 +22,7 @@ Description=Battery Level Reporter
 [Service]
 ExecStart=$INSTALL_DIR/$SERVICE_NAME.sh
 Restart=always
-RestartSec=120
+RestartSec=300
 
 [Install]
 WantedBy=default.target

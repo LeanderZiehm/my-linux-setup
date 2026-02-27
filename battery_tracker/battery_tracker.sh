@@ -6,30 +6,51 @@ BAT1="/sys/class/power_supply/BAT1"
 TOTAL_ENERGY_NOW=0
 TOTAL_ENERGY_FULL=0
 
-BAT0_STATUS="unknown"
-BAT1_STATUS="unknown"
+BAT0_STATUS=""
+BAT1_STATUS=""
+BAT_STATUS="unknown"
 
-if [[ -d "$BAT0" ]]; then
-    BAT0_NOW=$(cat "$BAT0/energy_now")
-    BAT0_FULL=$(cat "$BAT0/energy_full")
-    BAT0_STATUS=$(cat "$BAT0/status")
-    TOTAL_ENERGY_NOW=$((TOTAL_ENERGY_NOW + BAT0_NOW))
-    TOTAL_ENERGY_FULL=$((TOTAL_ENERGY_FULL + BAT0_FULL))
-else
-    echo "✖ BAT0 not found"
+read_battery() {
+    local BAT_PATH="$1"
+    local BAT_NAME="$2"
+
+    if [[ -d "$BAT_PATH" ]]; then
+        local NOW FULL STATUS
+
+        NOW=$(<"$BAT_PATH/energy_now")
+        FULL=$(<"$BAT_PATH/energy_full")
+        STATUS=$(<"$BAT_PATH/status")
+
+        # create BAT0_NOW, BAT0_FULL, etc.
+        printf -v "${BAT_NAME}_NOW" '%s' "$NOW"
+        printf -v "${BAT_NAME}_FULL" '%s' "$FULL"
+        printf -v "${BAT_NAME}_STATUS" '%s' "$STATUS"
+
+        # use the explicit variable names in arithmetic
+        TOTAL_ENERGY_NOW=$((TOTAL_ENERGY_NOW + ${BAT_NAME}_NOW))
+        TOTAL_ENERGY_FULL=$((TOTAL_ENERGY_FULL + ${BAT_NAME}_FULL))
+    fi
+}
+
+read_battery "$BAT0" BAT0
+read_battery "$BAT1" BAT1
+
+# normalize status
+BAT0_STATUS="${BAT0_STATUS,,}"
+BAT1_STATUS="${BAT1_STATUS,,}"
+
+if [[ "$BAT0_STATUS" == "discharging" || "$BAT1_STATUS" == "discharging" ]]; then
+    BAT_STATUS="discharging"
+elif [[ "$BAT0_STATUS" == "charging" || "$BAT1_STATUS" == "charging" ]]; then
+    BAT_STATUS="charging"
 fi
 
-if [[ -d "$BAT1" ]]; then
-    BAT1_NOW=$(cat "$BAT1/energy_now")
-    BAT1_FULL=$(cat "$BAT1/energy_full")
-    BAT1_STATUS=$(cat "$BAT1/status")
-    TOTAL_ENERGY_NOW=$((TOTAL_ENERGY_NOW + BAT1_NOW))
-    TOTAL_ENERGY_FULL=$((TOTAL_ENERGY_FULL + BAT1_FULL))
+if [[ "$TOTAL_ENERGY_FULL" -gt 0 ]]; then
+    TOTAL_PERCENT=$((100 * TOTAL_ENERGY_NOW / TOTAL_ENERGY_FULL))
 else
-    echo "✖ BAT1 not found"
+    echo "✖ No batteries detected"
+    exit 1
 fi
-
-TOTAL_PERCENT=$((100 * TOTAL_ENERGY_NOW / TOTAL_ENERGY_FULL))
 
 curl -X POST \
   https://tracker-api.leanderziehm.com/json \
@@ -37,13 +58,10 @@ curl -X POST \
   -H 'Content-Type: application/json' \
   --data-binary @- <<EOF
 {
-  "text": "battery-test",
+  "text": "battery(arch2)",
   "body": {
-    "total_energy_now": $TOTAL_ENERGY_NOW,
-    "total_energy_full": $TOTAL_ENERGY_FULL,
-    "bat0_status": "$BAT0_STATUS",
-    "bat1_status": "$BAT1_STATUS",
-    "total_percent": $TOTAL_PERCENT
+    "status": "$BAT_STATUS",
+    "percent": $TOTAL_PERCENT
   }
 }
 EOF
